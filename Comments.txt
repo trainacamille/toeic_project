@@ -1,0 +1,3 @@
+/* open cv4.2 et python 3.8
+windows
+*/
