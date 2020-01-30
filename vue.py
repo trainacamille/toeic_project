@@ -37,19 +37,17 @@ class View(Gtk.Window):
 
         stack.add_titled(grid, "enr", "Enregistrer correction")
 
-        button12 = Gtk.Button(label="Button 1")
-        button22 = Gtk.Button(label="Button 2")
-        button32 = Gtk.Button(label="Button 3")
-        button42 = Gtk.Button(label="Button 4")
-        button52 = Gtk.Button(label="Button 5")
-        button62 = Gtk.Button(label="Button 6")
 
-        grid2.add(button12)
-        grid2.attach(button22, 1, 0, 2, 1)
-        grid2.attach_next_to(button32, button12, Gtk.PositionType.BOTTOM, 1, 2)
-        grid2.attach_next_to(button42, button32, Gtk.PositionType.RIGHT, 2, 1)
-        grid2.attach(button52, 1, 2, 1, 1)
-        grid2.attach_next_to(button62, button52, Gtk.PositionType.RIGHT, 1, 1)
+        sel_cor = Gtk.FileChooserButton("Selectionner un dossier",Gtk.FileChooserAction.SELECT_FOLDER)
+        sel_cor.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
+
+        button2 = Gtk.Button(label="Lancer la correction")
+
+        box = Gtk.ComboBox()
+
+        grid2.attach(box, 1, 0, 2, 1)
+        grid2.attach(sel_cor, 3,0, 1, 2)
+        grid2.attach(button2, 1, 2, 1, 1)
 
         stack.add_titled(grid2, "cor", "Corriger")
 
