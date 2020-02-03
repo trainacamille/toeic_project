@@ -10,8 +10,10 @@ class View(Gtk.Window):
 
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data("""
-			box{
-                background-color: red;
+			window{
+                background: url("qccm.png") no-repeat;
+                background-size:cover;
+                font-family:georgia, serif;
 			}
 		""")
 
@@ -27,6 +29,10 @@ class View(Gtk.Window):
         stack.set_transition_type(Gtk.StackTransitionType.NONE)
         stack.set_transition_duration(1000)
 
+        gr = Gtk.Grid()
+        self.add(gr)
+        gr.set_column_homogeneous(True)
+        gr.set_row_spacing(30)
 
         grid = Gtk.Grid()
         self.add(grid)
@@ -40,22 +46,24 @@ class View(Gtk.Window):
         grid2.set_row_homogeneous(True)
         grid2.set_row_spacing(30)
 
-        sel_tel = Gtk.FileChooserButton("Selectionner un dossier",Gtk.FileChooserAction.SELECT_FOLDER)
+        sel_tel = Gtk.FileChooserButton("Selectionner un dossier")
         sel_tel.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
 
-        stack.add_titled(sel_tel, "tel", "Telecharger")
+        stack.add_titled(gr, "tel", "Telecharger")
+
+        gr.attach(sel_tel,0,0,1,2)
 
         button1 = Gtk.Button(label="Commencer l'enregistrement")
         entry1 = Gtk.Entry()
         entry1.set_text("Nom du TOEIC")
 
-        grid.attach(entry1,0,0,5,1)
-        grid.attach(button1,0,3,5,1)
+        grid.attach(entry1,0,0,1,2)
+        grid.attach(button1,0,3,1,2)
 
         stack.add_titled(grid, "enr", "Enregistrer correction")
 
 
-        sel_cor = Gtk.FileChooserButton("Selectionner un dossier",Gtk.FileChooserAction.SELECT_FOLDER)
+        sel_cor = Gtk.FileChooserButton("Selectionner un dossier")
         sel_cor.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
 
         button2 = Gtk.Button(label="Lancer la correction")
