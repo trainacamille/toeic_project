@@ -1,8 +1,18 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, GObject, Gdk
+
+
 
 class View(Gtk.Window):
+
+    __gsignals__={
+        'telecharg-ready': (GObject.SIGNAL_RUN_FIRST, None,()),
+        'correct-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
+        'display-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
+        'enr-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
+    }
+
     def __init__(self):
         Gtk.Window.__init__(self, title="logiciel Toeic")
         self.set_border_width(10)
@@ -51,6 +61,8 @@ class View(Gtk.Window):
 
         stack.add_titled(gr, "tel", "Telecharger")
 
+        sel_tel.connect("file-set",self.tel)
+
         gr.attach(sel_tel,0,0,1,2)
 
         button1 = Gtk.Button(label="Commencer l'enregistrement")
@@ -62,6 +74,7 @@ class View(Gtk.Window):
 
         stack.add_titled(grid, "enr", "Enregistrer correction")
 
+        button1.connect("clicked",self.enrg_corr)
 
         sel_cor = Gtk.FileChooserButton("Selectionner un dossier")
         sel_cor.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
@@ -79,14 +92,23 @@ class View(Gtk.Window):
 
         stack.add_titled(grid2, "cor", "Corriger")
 
+        button2.connect("clicked",self.correct)
+        button3.connect("clicked",self.display)
+
         stack_switcher = Gtk.StackSwitcher()
         stack_switcher.set_stack(stack)
         vbox.pack_start(stack_switcher, False , False, 0)
         vbox.pack_start(stack, True, False, 0)
 
 
+    def tel(self,b):
+        self.emit('telecharg-ready')
 
-win = View()
-win.connect("destroy", Gtk.main_quit)
-win.show_all()
-Gtk.main()
+    def enrg_corr(self,b):
+        self.emit('enr-clicked')
+
+    def correct(self,b):
+        self.emit('correct-clicked')
+
+    def display(self,b):
+        self.emit('display-clicked')
