@@ -1,14 +1,27 @@
-import cv2 
 import gi
 import numpy
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk,Gdk
 
 
 
 class VueFormulaireDeCorrection(Gtk.Window):
 
     def __init__(self):
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data("""
+    			window{
+                    background: url("AnswerSheet-1.png") no-repeat;
+                    background-size:cover;
+                    font-family:georgia, serif;
+    			}
+    		""")
+
+        Gtk.StyleContext.add_provider_for_screen(
+                Gdk.Screen.get_default(),
+                css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
 
         boxfenetre = Gtk.HBox(homogeneous=False,spacing=15)
         hbox = []
