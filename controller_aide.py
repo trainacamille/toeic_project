@@ -8,7 +8,7 @@ class Controller(object):
     def __init__(self, model, view, identifiant):
         self._model = model
         self._view = view
-		self.iden = identifiant
+        self.iden = identifiant
 
         self._view.connect('aide-ready', self.aide)
 
@@ -17,4 +17,5 @@ class Controller(object):
         Gtk.main()
 
     def aide(self, b, lettre):
-        /*self._model.ajout(lettre, self.iden)*/
+        print(self.iden)
+        #self._model.ajout(lettre, self.iden)

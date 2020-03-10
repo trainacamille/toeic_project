@@ -34,27 +34,31 @@ class View(Gtk.Window):
         self.choix_2 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse B")
         self.choix_3 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse C")
         self.choix_4 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse D")
-		self.choix_5 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Aucune de ces reponses")
+        self.choix_5 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Aucune de ces reponses")
 
         but= Gtk.Button(label="Valider")
 
 
         but.connect("clicked",self.send)
 
-        gr.attach(self.choix_1,0,0,1,1)
-        gr.attach(self.choix_2,1,0,1,1)
-        gr.attach(self.choix_3,2,0,1,1)
-        gr.attach(self.choix_4,3,0,1,1)
-		gr.attach(self.choix_5,4,0,1,1)
-        gr.attach(but,1,2,2,2)
+        gr.attach(self.choix_1,0,0,2,1)
+        gr.attach(self.choix_2,2,0,2,1)
+        gr.attach(self.choix_3,4,0,2,1)
+        gr.attach(self.choix_4,6,0,2,1)
+        gr.attach(self.choix_5,8,0,2,1)
+        gr.attach(but,3,2,4,2)
 
-        self.connect("destroy",Gtk.main_quit)
-
+        self.connect("delete_event",self.rien)
 
     def send(self,b):
         self.emit('aide-ready', "ex")
-		Gtk.main_quit()
+        Gtk.main_quit()
 
-win = View("qccm.png")
-win.show_all()
-Gtk.main()
+    def rien(self,b,k):
+        return True
+
+
+
+#win = View("qccm.png")
+#win.show_all()
+#Gtk.main()
