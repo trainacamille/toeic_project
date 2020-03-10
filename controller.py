@@ -2,7 +2,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from vue import View
-import shutil
+
 
 class Controller(object):
     def __init__(self, model, view):
@@ -29,5 +29,4 @@ class Controller(object):
         print("affichage")
 
     def tel(self, b, path):
-        /*attention ici en 1er argument ilfaudra mettre le chemin relatif du pdf*/
-        shutil.copy("qccm.png",path)
+        self._model.telecharger(path)

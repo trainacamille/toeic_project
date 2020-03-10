@@ -7,7 +7,7 @@ from gi.repository import Gtk, GObject, Gdk, GdkPixbuf
 class View(Gtk.Window):
 
     __gsignals__={
-        'telecharg-ready': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
+        'aide-ready': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
     }
 
     def __init__(self, file):
@@ -30,10 +30,11 @@ class View(Gtk.Window):
         gr.set_column_homogeneous(True)
         gr.set_row_spacing(30)
 
-        self.choix_1 =Gtk.RadioButton(label="Reponse 1")
-        self.choix_2 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse 2")
-        self.choix_3 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse 3")
-        self.choix_4 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse 4")
+        self.choix_1 =Gtk.RadioButton(label="Reponse A")
+        self.choix_2 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse B")
+        self.choix_3 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse C")
+        self.choix_4 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Reponse D")
+		self.choix_5 = Gtk.RadioButton.new_with_label_from_widget(self.choix_1,"Aucune de ces reponses")
 
         but= Gtk.Button(label="Valider")
 
@@ -44,13 +45,15 @@ class View(Gtk.Window):
         gr.attach(self.choix_2,1,0,1,1)
         gr.attach(self.choix_3,2,0,1,1)
         gr.attach(self.choix_4,3,0,1,1)
+		gr.attach(self.choix_5,4,0,1,1)
         gr.attach(but,1,2,2,2)
 
         self.connect("destroy",Gtk.main_quit)
 
 
     def send(self,b):
-        self.emit('telecharg-ready', self.sel_tel.get_filename())
+        self.emit('aide-ready', "ex")
+		Gtk.main_quit()
 
 win = View("qccm.png")
 win.show_all()
