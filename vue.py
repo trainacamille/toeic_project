@@ -7,7 +7,7 @@ from gi.repository import Gtk, GObject, Gdk
 class View(Gtk.Window):
 
     __gsignals__={
-        'telecharg-ready': (GObject.SIGNAL_RUN_FIRST, None,()),
+        'telecharg-ready': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
         'correct-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
         'display-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
         'enr-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
@@ -56,14 +56,16 @@ class View(Gtk.Window):
         grid2.set_row_homogeneous(True)
         grid2.set_row_spacing(30)
 
-        sel_tel = Gtk.FileChooserButton("Selectionner un dossier")
-        sel_tel.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
+        self.sel_tel = Gtk.FileChooserButton("Selectionner un dossier")
+        self.sel_tel.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
+        but= Gtk.Button(label="Valider")
 
         stack.add_titled(gr, "tel", "Telecharger")
 
-        sel_tel.connect("file-set",self.tel)
+        but.connect("clicked",self.tel)
 
-        gr.attach(sel_tel,0,0,1,2)
+        gr.attach(self.sel_tel,0,0,1,2)
+        gr.attach(but,0,2,1,2)
 
         button1 = Gtk.Button(label="Commencer l'enregistrement")
         entry1 = Gtk.Entry()
@@ -102,7 +104,7 @@ class View(Gtk.Window):
 
 
     def tel(self,b):
-        self.emit('telecharg-ready')
+        self.emit('telecharg-ready', self.sel_tel.get_filename())
 
     def enrg_corr(self,b):
         self.emit('enr-clicked')
