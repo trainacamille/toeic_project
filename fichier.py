@@ -6,6 +6,46 @@ import json
 
 import aide
 
+def moyenne(liste):
+    somme=0
+    max=-1
+    for i in range(0,len(liste)):
+        somme+=liste[i]
+    return somme/len(liste)
+
+def bonne_reponse(liste):
+    nb=0
+    mean=moyenne(liste)*1.25
+    for u in range(0,len(liste)):
+        if(liste[u]>mean ):
+            rp = u+1
+            nb+=1
+    if nb!=1:
+        return -1
+    else:
+        return rp
+
+def correction_fine(image,i):
+    #prend l'image en imseuil et décale pour sauter les num questions et les bords du haut
+    largeur=image.shape[1]
+    hauteur=image.shape[0]
+    depart_x=int(largeur/4)+1
+    img=image[7:hauteur,depart_x:largeur]
+    #cv2.imshow('win'+str(i),img)
+    #la diviser en 4
+    nv_h=img.shape[0]
+    nv_l=img.shape[1]
+    proposition=[]
+    pas=int(nv_l/4)
+    bloc=0
+    for i in range(0,4):
+        prop=img[0:nv_h,bloc:bloc+pas]
+        bloc+=pas
+        total = cv2.countNonZero(prop)
+        proposition.append(total)
+        #print(i, total)
+    return bonne_reponse(proposition)
+
 """from pdf2image import convert_from_path
 
 feuille_reponse=convert_from_path('../TOEIC2.pdf',dpi=200)
@@ -13,7 +53,7 @@ feuille_reponse=convert_from_path('../TOEIC2.pdf',dpi=200)
 for i,mat in enumerate(feuille_reponse):
     mat.save(os.path.join('E:\\ING2\\Projet\\Code', 'scan'+str(i)+'.jpg'), 'JPEG')
 """
-img=cv2.imread("../scan0.jpg",cv2.IMREAD_COLOR)
+img=cv2.imread("../test1.jpg",cv2.IMREAD_COLOR)
 
 #rotation 90
 rows, cols = img.shape[0], img.shape[1]
@@ -61,14 +101,14 @@ imflou=cv2.GaussianBlur(contraste,(5,5),0)
 imcanny=cv2.Canny(imflou,75,150,(3,3))
 #detection bords et nom (sur contour canny)
 
-seuil =  cv2.adaptiveThreshold(imflou, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 4)
+#seuil =  cv2.adaptiveThreshold(imflou, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 4)
 
-re,imseuil=cv2.threshold(imflou,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+#re,imseuil=cv2.threshold(imflou,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
 dest=cv2.dilate(imcanny,kernel)
 
-erode=cv2.erode(imseuil, kernel)
+#erode=cv2.erode(imseuil, kernel)
 contours, hierarchy = cv2.findContours(dest, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 ctri=sorted(contours, key=cv2.contourArea, reverse=False)
@@ -89,6 +129,8 @@ for cnt in ctri:
 
 #dessin juste pour moi dans les tests
 cont=aide.sort_contours(carre)[0]
+
+
 for i,q in enumerate(cont):
     cv2.drawContours(image, [q], -1, colors[i], 5)
 
@@ -104,9 +146,9 @@ rec=aide.order_points(np.array(pliste))
 paper=aide.four_point_transform(imflou,rec)    
 papier=aide.four_point_transform(imm,rec) 
 pcany=aide.four_point_transform(imcanny,rec)
-pseuil=aide.four_point_transform(imseuil,rec)
+#pseuil=aide.four_point_transform(imseuil,rec)
 pdest=aide.four_point_transform(dest,rec)
-perode=aide.four_point_transform(erode,rec)
+#perode=aide.four_point_transform(erode,rec)
 pcol=papier.copy()
 
 """maintenant les grandes sections et le nom"""
@@ -213,34 +255,36 @@ score_r=0
 score_l=0
 #1- on descend dans chacune des questions (choix)
 for e,quest in enumerate(choix):
-    reponse=None
+    rponses=[]
     if(len(quest)>2):
         quest=aide.sort_contours(quest)[0]
     #Gestion erreur pas pu avoir toutes les questions exactement
     if(len(quest)!=4):
         #cv2.imshow('Question'+str(e+1),blocl[e])
-        cv2.imshow('Seuillage'+str(e+1),seuillage[e])
-        print("Je n'ai pas pu avoir exactement toutes les possibilites pour la question "+str(e+1))
+        #cv2.imshow('Seuillage'+str(e+1),seuillage[e])
+        print("Erreur a la question "+str(e+1)+" correction fine utilisée")
+        reponse=correction_fine(seuillage[e],e+1)
+        print(e+1, reponse)
         #definir le traitement à faire(en fonction de la vue)
         #pour le moment un 0 automatique
-        continue
     #2-pour chaque question on boucle sur les 4 possibilités
-    for j,c in enumerate(quest):
-        mask=np.zeros(seuillage[e].shape,dtype=np.uint8)
-        cv2.drawContours(mask, [c], -1, 255, -1)
-        #Pour chaque possibilité compter la valeur
-        mask = cv2.bitwise_and(seuillage[e], seuillage[e], mask=mask)
-        total = cv2.countNonZero(mask)
+    else:
+        for j,c in enumerate(quest):
+            mask=np.zeros(seuillage[e].shape,dtype=np.uint8)
+            cv2.drawContours(mask, [c], -1, 255, -1)
+            #Pour chaque possibilité compter la valeur
+            mask = cv2.bitwise_and(seuillage[e], seuillage[e], mask=mask)
+            total = cv2.countNonZero(mask)
 
-        #On met a jour le total si on a pu trouver mieux
-        if reponse is None or total > reponse[0]:
-            reponse = (total,j)
-    #print("La reponse cochee a la question "+ str(e+1)+" est "+str(reponse[1]+1) +" avec un total de "+str(total) )
+            #On met a jour le total
+            rponses.append(total)
+        reponse=bonne_reponse(rponses)
+    #print("Reponse question "+ str(e+1)+": "+str(reponse) +" total: "+str(total) )
     #Pour finir on Corrige
-    print("La reponse cochee a la question "+ str(e+1)+" est "+str(reponse[1]+1) +" et la bonne reponse est "+str(reading_r[str(e+100)]) ) 
-    if reponse[1]==reading_r[str(e+100)]:
+    #print("Reponse question "+ str(e+1)+": "+str(reponse) +" bonne reponse: "+str(reading_r[str(e+100)]) ) 
+    if reponse==listening_r[str(e)]:
         score_r+=1
-
+        #print(rponses)
 print("Ton résultat est "+str(score_r))
 
 
@@ -259,7 +303,7 @@ resultat={"0":5,"1":5,"2":5,"3":5,"4":5,"5":5,"6":5,"7":10}
 #cv2.namedWindow('Contours', cv2.WINDOW_NORMAL)
 cv2.namedWindow('Canny', cv2.WINDOW_NORMAL)
 #cv2.namedWindow('lumi', cv2.WINDOW_NORMAL)
-cv2.imshow('Canny',part2)
+cv2.imshow('Canny',papier)
 #cv2.imshow('Gray',sliste[1])
 #cv2.imshow('Contours',sliste[0])
 
