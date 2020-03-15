@@ -11,15 +11,15 @@ from gi.repository import Gtk, Gio
 class Application(Gtk.Application):
 
 
-    def __init__(self):
-
+    def __init__(self,nom_fichier):
+        self.fichier = nom_fichier
         flags = Gio.ApplicationFlags.FLAGS_NONE
 
         super(Application, self).__init__(flags=flags)
 
     def do_activate(self):
         #Argument de la vee à changer par ce qui est envoyé par le controleur principale
-        c.Controleur_vue_formulaireCorrection(m.Model(),v.VueFormulaireDeCorrection("test_fichier"))
+        c.Controleur_vue_formulaireCorrection(m.Model(),v.VueFormulaireDeCorrection(self.fichier))
 
     def do_startup(self):
 
