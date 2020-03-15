@@ -45,17 +45,17 @@ class VueFormulaireDeCorrection(Gtk.Window):
                 hbox[j].pack_start(button[i], True, True, 0)
                 k = k+ 1
             elif i%4 == 1 :
-                # création case B et ajout à la boite existante
+                # creation case B et ajout a la boite existante
                 button.append(Gtk.RadioButton.new_with_label_from_widget(button[i-1], "B"))
                 button[i].connect("toggled", self.on_button_toggled, i)
                 hbox[j].pack_start(button[i], True, True, 0)
             elif i%4 == 2:
-                # création case C et ajout à la boite existante
+                # creation case C et ajout a la boite existante
                 button.append( Gtk.RadioButton.new_with_label_from_widget(button[i-2], "C"))
                 button[i].connect("toggled", self.on_button_toggled, i)
                 hbox[j].pack_start(button[i], True, True, 0)
             else :
-                # création case D et ajout à la boite existante
+                # creation case D et ajout a la boite existante
                 button.append(Gtk.RadioButton.new_with_label_from_widget(button[i-3], "D"))
                 button[i].connect("toggled", self.on_button_toggled, i)
                 hbox[j].pack_start(button[i], True , True, 0)
@@ -80,6 +80,7 @@ class VueFormulaireDeCorrection(Gtk.Window):
         valider.connect("clicked", self.on_button_clicked,button)
         boxfenetre.pack_start(valider, False, False, 0)
         self.add(boxfenetre)
+        self.connect("delete_event",self.rien)
 
 
     #fonction de verification d'activation du bouton
@@ -94,3 +95,6 @@ class VueFormulaireDeCorrection(Gtk.Window):
     def on_button_clicked(self,widget, button):
 
         self.emit("validation-ready",button)
+
+    def rien(self,b,k):
+        return True

@@ -8,9 +8,9 @@ class View(Gtk.Window):
 
     __gsignals__={
         'telecharg-ready': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
-        'correct-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
+        'correct-clicked': (GObject.SIGNAL_RUN_FIRST, None,(str,str,)),
         'display-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
-        'enr-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
+        'enr-clicked': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
     }
 
     def __init__(self):
@@ -68,27 +68,27 @@ class View(Gtk.Window):
         gr.attach(but,0,2,1,2)
 
         button1 = Gtk.Button(label="Commencer l'enregistrement")
-        entry1 = Gtk.Entry()
-        entry1.set_text("Nom du TOEIC")
+        self.entry1 = Gtk.Entry()
+        self.entry1.set_text("Nom du TOEIC")
 
-        grid.attach(entry1,0,0,1,2)
+        grid.attach(self.entry1,0,0,1,2)
         grid.attach(button1,0,3,1,2)
 
         stack.add_titled(grid, "enr", "Enregistrer correction")
 
         button1.connect("clicked",self.enrg_corr)
 
-        sel_cor = Gtk.FileChooserButton("Selectionner un dossier")
-        sel_cor.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
+        self.sel_cor = Gtk.FileChooserButton("Selectionner un dossier")
+        self.sel_cor.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
 
         button2 = Gtk.Button(label="Lancer la correction")
         button3 = Gtk.Button(label="Afficher resultats")
         button3.set_sensitive(False)
 
-        box = Gtk.ComboBox()
+        self.box = Gtk.ComboBox()
 
-        grid2.attach(box, 0, 0, 5, 1)
-        grid2.attach(sel_cor, 6,0, 5, 1)
+        grid2.attach(self.box, 0, 0, 5, 1)
+        grid2.attach(self.sel_cor, 6,0, 5, 1)
         grid2.attach(button2, 3, 3, 5, 1)
         grid2.attach(button3, 3, 4, 5, 1)
 
@@ -107,10 +107,10 @@ class View(Gtk.Window):
         self.emit('telecharg-ready', self.sel_tel.get_filename())
 
     def enrg_corr(self,b):
-        self.emit('enr-clicked')
+        self.emit('enr-clicked', self.entry1.get_text())
 
     def correct(self,b):
-        self.emit('correct-clicked')
+        self.emit('correct-clicked',self.box.get_active(),self.sel_cor.get_filename())
 
     def display(self,b):
         self.emit('display-clicked')
