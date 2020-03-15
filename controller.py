@@ -4,6 +4,7 @@ from gi.repository import Gtk
 from vue import View
 
 
+
 class Controller(object):
     def __init__(self, model, view):
         self._model = model
@@ -19,10 +20,10 @@ class Controller(object):
 
         Gtk.main()
 
-    def enrg_corr(self,b):
-        print("enregistrement")
+    def enrg_corr(self, b, nom):
+        self._model.enregist(nom)
 
-    def correct(self, b):
+    def correct(self, b, nom, path):
         print("correction")
 
     def display(self, b):
