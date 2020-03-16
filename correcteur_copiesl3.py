@@ -216,7 +216,7 @@ if __name__ == "__main__":
     mon_dossier='correction'
     os.mkdir(mon_dossier)
     #prendre le nom du fichier par la prof(ici statique) et le chemin créé 
-    chemin='../TOEIC1.pdf'
+    chemin='../TOEIC_L3_13_copies.pdf'
     nb_pages=pdfimg(chemin,mon_dossier)
 
     #Commencer le traitement pour chacune des pages recensées
@@ -239,9 +239,9 @@ if __name__ == "__main__":
         dest=cv2.dilate(imcanny,kernel)
         coord_bords,cont_bords=detectbord(dest)
 
-        if(len(coord_bords) != 5):
+        """if(len(coord_bords) != 5):
             print("Oups, je n'ai pas trouvé tous les points pour faire la bonne rotation")
-            continue
+            continue"""
         #On a trouve nos 5 carrés du bord et on va chercher la bonne rotation
         #angle_rot=aide.rotationimage(coord_bords,0)
         angle=-90
@@ -261,7 +261,8 @@ if __name__ == "__main__":
         for u,cnt in enumerate(cont):
             #on a etudie la feuille et on sait que le repere au milieu est le 3eme point
             #on veut le sauter pour calibrer sur les bords
-            if (u!=2):
+            #if (u!=2):
+            if(1):
                 ln=cv2.arcLength(cnt, True)
                 approx = cv2.approxPolyDP(cnt, 0.02 * ln, True)
                 (tl, tr, br, bl)=aide.order_points(approx.reshape(4,2))   
@@ -300,7 +301,7 @@ if __name__ == "__main__":
     print()
     print("Correction Terminee")    
 
-    os.system("rmdir name "+mon_dossier+" /S /Q")
+    #os.system("rmdir name "+mon_dossier+" /S /Q")
 
 
 
