@@ -1,5 +1,4 @@
 import gi
-
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GObject
 
@@ -22,6 +21,8 @@ class VueFormulaireDeCorrection(Gtk.Window):
         button = []
         Gtk.Window.__init__(self, title=titre)
         self.maximize()
+        fenetre_deroulante =Gtk.ScrolledWindow()
+        fenetre_deroulante.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.ALWAYS)
         #construction des boites de questions
 
 
@@ -79,7 +80,10 @@ class VueFormulaireDeCorrection(Gtk.Window):
         valider = Gtk.Button(label="Valider")
         valider.connect("clicked", self.on_button_clicked,button)
         boxfenetre.pack_start(valider, False, False, 0)
-        self.add(boxfenetre)
+
+        fenetre_deroulante.add(boxfenetre)
+        self.add(fenetre_deroulante)
+
         self.connect("delete_event",self.rien)
 
 
