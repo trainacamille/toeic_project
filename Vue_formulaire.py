@@ -80,6 +80,7 @@ class VueFormulaireDeCorrection(Gtk.Window):
         valider = Gtk.Button(label="Valider")
         valider.connect("clicked", self.on_button_clicked,button)
         boxfenetre.pack_start(valider, False, False, 0)
+
         fenetre_deroulante.add(boxfenetre)
         self.add(fenetre_deroulante)
 

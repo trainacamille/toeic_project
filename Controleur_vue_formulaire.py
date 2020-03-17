@@ -15,19 +15,19 @@ class Controleur_vue_formulaireCorrection(object) :
         self._vue = VueFormulaireDeCorrection
         #ajout signal emit par la vue par
         self._vue.connect("validation-ready",self.validation)
-        self._vue.connect("destroy",Gtk.main_quit)
+        #self._vue.connect("destroy",Gtk.main_quit)
         self._vue.show_all()
 
 
 
-        Gtk.main()
+        #Gtk.main()
     #fonction de validation
     def validation(self,widget,button):
-        #transformation du tableau de boutons en une liste de caractère
+        #transformation du tableau de boutons en une liste de caractere
         reponse = []
         for i in range(800) :
             if button[i].get_active():
                 reponse.append(button[i].get_label())
         #ecriture dans un fichier json le formulaire de correction
         self._model.ecriture_fichier(reponse,self._vue.get_title())
-        Gtk.main_quit()
+        self._vue.destroy()
