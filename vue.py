@@ -1,6 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject, Gdk
+import os
 
 
 
@@ -19,7 +20,7 @@ class View(Gtk.Window):
         self.resize(600,500)
 
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_data("""
+        css_provider.load_from_data(b"""
 			window{
                 background: url("qccm.png") no-repeat;
                 background-size:cover;
@@ -85,7 +86,10 @@ class View(Gtk.Window):
         button3 = Gtk.Button(label="Afficher resultats")
         button3.set_sensitive(False)
 
-        self.box = Gtk.ComboBox()
+        self.box = Gtk.ComboBoxText()
+        for i in os.listdir('JSON'):
+            self.box.append_text(i)
+		
 
         grid2.attach(self.box, 0, 0, 5, 1)
         grid2.attach(self.sel_cor, 6,0, 5, 1)
@@ -108,9 +112,11 @@ class View(Gtk.Window):
 
     def enrg_corr(self,b):
         self.emit('enr-clicked', self.entry1.get_text())
+        self.box.append_text(self.entry1.get_text()+'.json')
+		
 
     def correct(self,b):
-        self.emit('correct-clicked',self.box.get_active(),self.sel_cor.get_filename())
+        self.emit('correct-clicked',self.box.get_active_text(),self.sel_cor.get_filename())
 
     def display(self,b):
         self.emit('display-clicked')

@@ -2,6 +2,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from vue import View
+import scan
 
 
 
@@ -23,8 +24,10 @@ class Controller(object):
     def enrg_corr(self, b, nom):
         self._model.enregist(nom)
 
-    def correct(self, b, nom, path):
-        print("correction")
+    def correct(self, b, nom, path): #nom fichier json(a utiliser) path dossier a corriger
+        print("correction")#appeler la fonction de correction (qui est dans model)
+        path=path+'/TOEIC1.pdf'
+        self._model.corriger(nom,path)
 
     def display(self, b):
         print("affichage")
