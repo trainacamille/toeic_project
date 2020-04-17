@@ -152,8 +152,6 @@ def rotationimage(pts, ecart):
                 if posminy > pts[i][1]:
                     posminy = 2
 
-    print (pts)
-
     if compteurx[2]==0:
         if compteurx[posminx]==3:
             return 90
