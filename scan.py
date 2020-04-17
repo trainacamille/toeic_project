@@ -4,75 +4,10 @@ from pdf2image import convert_from_path
 import numpy as np
 import aide
 import json
-
-
-from openpyxl import Workbook, load_workbook
-from openpyxl.drawing.image import Image
-
-def score_toeic(x):
-    if x == 0:
-        return 0
-    if x >= 1 and x < 17:
-        return 5
-    if x >= 17 and x < 28:
-        return (x-15)*5
-    if x == 28:
-        return 70
-    if x >= 29 and x < 35:
-        return (x-13)*5
-    if x >= 36 and x < 88:
-        return (x-36)*10+115
-    if x >= 38 and x < 46:
-        return (x-38)*10+140
-    if x == 46:
-        return 205
-    if x >= 47 and x < 53:
-        return (x-47)*5+215
-    if x >= 53 and x < 56:
-        return (x-53)*5+255
-    if x >= 57 and x < 61:
-        return (x-57)*5+285
-    if x == 61:
-        return 310
-    if x >= 62 and x < 74:
-        return (x-62)*5+320
-    if x == 74:
-        return 385
-    if x >= 75 and x < 78:
-        return (x-75)*5+395
-    if x >= 78 and x < 89:
-        return (x-78)*5+415
-    if x >= 89 and x < 93:
-        return (x-89)*5+475
-    if x >= 93 and x < 101:
-        return 495
-
-def remplir_excel(nomfichier, nb_etudiant, nbr, nbl, imgnom):
-    #wb = load_workbook(filename=nomfichier)
-    wb = Workbook()
-    ws1 = wb.active
-    ws1.title = "score"
-    ws2 = wb.create_sheet(title="questions")
-    ws1['A1'] = "Nom et Prénom"
-    ws1['B1'] = "Nombre Réponses Reading"
-    ws1['C1'] = "Nombre Réponses Listening"
-    ws1['D1'] = "Score Reading"
-    ws1['E1'] = "Score Listening"
-    ws1.column_dimensions['A'].width = 120
-    ws2['A1'] = "Numéro ligne étudiant"
-
-    #ws1 = wb.active
-    img = Image(imgnom)
-    ws1.add_image(img, 'A'+str(nb_etudiant+1))
-    ws1['B'+str(nb_etudiant+1)] = nbr
-    ws1['C'+str(nb_etudiant+1)] = nbl
-    ws1['D'+str(nb_etudiant+1)] = score_toeic(nbr)
-    ws1['E'+str(nb_etudiant+1)] = score_toeic(nbl)
-    wb.save(filename=nomfichier)
-
+import modeleexcel as ex
 
 def pdfimg(nom,dossier):
-    feuille_reponse=convert_from_path(nom,dpi=200)
+    feuille_reponse=convert_from_path(nom,dpi=200,output_folder=dossier)
     for i,mat in enumerate(feuille_reponse):
         mat.save(os.path.join(dossier, 'epreuve'+str(i)+'.jpg'), 'JPEG')
     return i
@@ -112,7 +47,51 @@ def detectbord(img):
                 pliste.append((tr[0],tr[1]))
     #maintenant on veut retourner les coordonnées de ces points pour trouver l'ordre de rotation
     #ains que la liste des contours qui nous servira pour le zoom sur les bords
+    #(c'est inutile de renvoyer carre car orderpoint fait le travail)
     return pliste,carre
+
+#Pour des raisons d'amelioration, l'ancienne
+#methode de detection des bords est abandonnée, on utilisera celle ci
+def detecterbord(img,minp=850):
+    #une image niveau de gris que je mets en tresh
+    _,imseuil=cv2.threshold(img,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+    #une ouverture de l'image seuillee pour reduire les possibilites
+    noyeau = np.ones((3,3),np.uint8)
+    resultat=cv2.morphologyEx(imseuil, cv2.MORPH_OPEN, noyeau)
+
+    #On cherche les composants connexes
+    retval, labels, stats, centroids=cv2.connectedComponentsWithStatsWithAlgorithm(	resultat, 4, cv2. CV_32S,cv2.CCL_WU)
+    #minp peu varier(de 50) en fonction du nombre de contour trouvé(une amelioration)
+    pliste=[]
+    for i in range (1,retval):
+        #On sait que les carrés du bord sont remplis en pixels(etudier le retour de stats)
+        if(stats[i,4]>minp):
+            if (stats[i,2] in range(20,50) and stats[i,3] in range(20,50)):
+                tr=(stats[i,0]+stats[i,2],stats[i,1])
+                pliste.append(tr)
+    nb=0
+    #pour eviter la boucle en montant et en descandant,on fixe à 7(arbitraire)
+    # le max d'iterration
+    while nb<7:
+        if(len(pliste)==5):
+            break
+        elif(len(pliste)<5):
+            #on diminue minp
+            minp-=100
+            nb+=1
+        elif(len(pliste)>5):
+            #on augmente minp
+            minp+=100
+            nb+=1
+        #On refait le traitement (c'est nécessaire pour avoir les 5 carrés pour la rotation)
+        pliste=[]
+        for i in range (1,retval):
+            if (stats[i,2] in range(20,50) and stats[i,3] in range(20,50)):
+                if(stats[i,4]>minp):
+                    tr=(stats[i,0]+stats[i,2],stats[i,1])
+                    pliste.append(tr)
+    
+    return pliste    
 
 def extraction_nom(img,i,contours,mon_dossier='correction'):
     #une image couleur    
@@ -241,10 +220,12 @@ def division_image(partie):
     return choix,seuillage  
 
 def detection_rep(choix,seuillage,part_r,n):
+    reponses_etud=[]
     score=0
     #1- on descend dans chacune des questions (choix)
     for e,quest in enumerate(choix):
         rponses=[]
+        #parce que ça génere des probleme sinon
         if(len(quest)>2):
             quest=aide.sort_contours(quest)[0]
         #Gestion erreur pas pu avoir toutes les questions exactement
@@ -263,9 +244,10 @@ def detection_rep(choix,seuillage,part_r,n):
                 #On met a jour le total
                 rponses.append(total)
             reponse=bonne_reponse(rponses)
-            if(bonne_reponse(rponses)==-1):
-                print(e+1,rponses)
+            """if(bonne_reponse(rponses)==-1):
+                print(e+1,rponses)"""
         #Pour finir on Corrige
+        reponses_etud.append(reponse)
         #print("Reponse question "+ str(e+1)+": "+str(reponse) +" bonne reponse: "+str(part_r[str(e)]) ) 
         if(n==5):
             if reponse==part_r[str(e)]:
@@ -273,91 +255,5 @@ def detection_rep(choix,seuillage,part_r,n):
         elif n==4:
             if reponse==part_r[str(e+100)]:
                 score+=1
-    return score
+    return score,reponses_etud
 
-def corriger(nom,path):
-    nom='JSON/'+nom
-    #creer un repertoire dans lequel seront enregistrés les documents nécessaires à la correction
-    mon_dossier='correction'
-    os.mkdir(mon_dossier)
-    #prendre le nom du fichier par la prof(ici statique) et le chemin créé 
-    nb_pages=pdfimg(path,mon_dossier)
-
-    #Commencer le traitement pour chacune des pages recensées
-    for i in range(0,nb_pages+1):
-        img=cv2.imread(mon_dossier+'/epreuve'+str(i)+'.jpg',cv2.IMREAD_COLOR)
-
-        #Si on n'a pas eu l'image
-        if(not img.data):
-            print('Oups, ton image n\'existe pas dis-donc!')
-            continue
-        #Detecter les contours pour la rotation
-        #Pour cela appliquer le prétraitement de l'image et passer l'image traitée
-
-        imgray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-        contraste=cv2.convertScaleAbs(imgray,None,0.8,0)
-        imflou=cv2.GaussianBlur(contraste,(5,5),0)
-        imcanny=cv2.Canny(imflou,75,150,(3,3))
-
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
-        dest=cv2.dilate(imcanny,kernel)
-        coord_bords,cont_bords=detectbord(dest)
-
-        if(len(coord_bords) != 5):
-            print("Oups, je n'ai pas trouvé tous les points pour faire la bonne rotation")
-            continue
-        #On a trouve nos 5 carrés du bord et on va chercher la bonne rotation
-
-        #Penser à l'écart pour une efficacité
-        angle_rot=aide.rotationimage(coord_bords,80)
-        imrote=rotation(dest,angle_rot)
-        imflou=rotation(imflou,angle_rot)
-        couleur=rotation(img,angle_rot)
-
-        #Apres rotation, on redétecte les bords sur l'image pour la remetre droite
-        #si elle était de travers
-
-        #(peut etre cette partie est-elle inutile mais on verra)
-
-        coord_bords,cont_bords=detectbord(imrote)
-        cont=aide.sort_contours(cont_bords)[0]
-        pliste=[]
-        for u,cnt in enumerate(cont):
-            #on a etudie la feuille et on sait que le repere au milieu est le 3eme point
-            #on veut le sauter pour calibrer sur les bords
-            if (u!=2):
-                ln=cv2.arcLength(cnt, True)
-                approx = cv2.approxPolyDP(cnt, 0.02 * ln, True)
-                (tl, tr, br, bl)=aide.order_points(approx.reshape(4,2))   
-                pliste.append((tr[0],tr[1]))  
-        rec=aide.order_points(np.array(pliste))
-        paper=aide.four_point_transform(imflou,rec)
-        pdest=aide.four_point_transform(imrote,rec)
-        papier=aide.four_point_transform(couleur,rec)
-
-        #On s'attaque au nom et au listening/reading
-        contours, hierarchy = cv2.findContours(pdest, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        ctri=sorted(contours, key=cv2.contourArea, reverse=False)
-        chemin=extraction_nom(papier,i,ctri)
-        parties=detection_sections(paper,ctri)
-
-        if(len(parties)!=2):
-            print(len(parties))
-            print("Le listening et le reading n'ont pas étés trouves")
-            continue
-        listening=parties[0]
-        reading=parties[1]
-        listening_r,reading_r=recuperer_reponse(nom)
-        choix1,seuillage1=division_image(listening)
-        choix2,seuillage2=division_image(reading)
-
-        score_l=detection_rep(choix1,seuillage1,listening_r,5)
-        score_r=detection_rep(choix2,seuillage2,reading_r,4)
-
-        #ici envoyer le resultat à l'excel
-        remplir_excel("EXCEL/toeic_test.xlsx",i+1,score_r,score_l,chemin)
-
-    print()
-    print("Correction Terminee")    
-
-    os.system("rmdir name "+mon_dossier+" /S /Q")
