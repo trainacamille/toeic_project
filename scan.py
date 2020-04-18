@@ -75,6 +75,11 @@ def detecterbord(img,minp=850):
     while nb<7:
         if(len(pliste)==5):
             break
+        #ici on veut garantir que avant de sortir on
+        # s'en sort avec des points eleves(c'est mieux que bas) 
+        if(nb==6):
+            nb+=1
+            minp-=100
         elif(len(pliste)<5):
             #on diminue minp
             minp-=100
@@ -108,7 +113,13 @@ def extraction_nom(img,i,contours,mon_dossier='correction'):
                 cv2.imwrite(mon_dossier+'/nom'+str(i)+'.jpg',nom)
                 #Seul un contour aurait cette taille.
                 return mon_dossier+'/nom'+str(i)+'.jpg'
-    return None
+    #si on n'a pas pu extraire le nom on cree une image avec 
+    # le nom de la feuille à aller chercher* 
+    limg = np.zeros((150,260,3), np.uint8)
+    cv2.putText(limg,'feuille'+str(i+1),(4,100), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2,(255,255,255),2,cv2.LINE_AA)
+    cv2.imwrite(mon_dossier+'/nom'+str(i)+'.jpg',limg)
+    return mon_dossier+'/nom'+str(i)+'.jpg'
+
 
 def detection_sections(img,contours):
     sliste=[]
