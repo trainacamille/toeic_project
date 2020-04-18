@@ -1,6 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject, Gdk
+import os
 
 
 
@@ -9,7 +10,7 @@ class View(Gtk.Window):
     __gsignals__={
         'telecharg-ready': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
         'correct-clicked': (GObject.SIGNAL_RUN_FIRST, None,(str,str,)),
-        'display-clicked': (GObject.SIGNAL_RUN_FIRST, None,()),
+        'display-clicked': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
         'enr-clicked': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
     }
 
@@ -19,7 +20,7 @@ class View(Gtk.Window):
         self.resize(600,500)
 
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_data("""
+        css_provider.load_from_data(b"""
 			window{
                 background: url("qccm.png") no-repeat;
                 background-size:cover;
@@ -27,10 +28,11 @@ class View(Gtk.Window):
 			}
 		""")
 
-        Gtk.StyleContext.add_provider_for_screen(
+        self.get_style_context().add_provider(css_provider,600)
+        """Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)"""
 
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL , spacing=6)
         self.add(vbox)
@@ -82,20 +84,24 @@ class View(Gtk.Window):
         self.sel_cor.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
 
         button2 = Gtk.Button(label="Lancer la correction")
-        button3 = Gtk.Button(label="Afficher resultats")
-        button3.set_sensitive(False)
+        self.button3 = Gtk.Button(label="Afficher resultats")
+        self.button3.set_sensitive(False)
 
-        self.box = Gtk.ComboBox()
+        self.box = Gtk.ComboBoxText()
+        for i in os.listdir('JSON'):
+            name=i.split(".")
+            self.box.append_text(name[0])
+		
 
         grid2.attach(self.box, 0, 0, 5, 1)
         grid2.attach(self.sel_cor, 6,0, 5, 1)
         grid2.attach(button2, 3, 3, 5, 1)
-        grid2.attach(button3, 3, 4, 5, 1)
+        grid2.attach(self.button3, 3, 4, 5, 1)
 
         stack.add_titled(grid2, "cor", "Corriger")
 
         button2.connect("clicked",self.correct)
-        button3.connect("clicked",self.display)
+        self.button3.connect("clicked",self.display)
 
         stack_switcher = Gtk.StackSwitcher()
         stack_switcher.set_stack(stack)
@@ -108,9 +114,11 @@ class View(Gtk.Window):
 
     def enrg_corr(self,b):
         self.emit('enr-clicked', self.entry1.get_text())
+        self.box.append_text(self.entry1.get_text())
+		
 
     def correct(self,b):
-        self.emit('correct-clicked',self.box.get_active(),self.sel_cor.get_filename())
+        self.emit('correct-clicked',self.box.get_active_text(),self.sel_cor.get_filename())
 
     def display(self,b):
-        self.emit('display-clicked')
+        self.emit('display-clicked',self.sel_cor.get_filename())
