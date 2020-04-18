@@ -34,7 +34,10 @@ class Model(object):
     
                 os.mkdir(mon_dossier)
                 #prendre le nom du fichier par la prof(ici statique) et le chemin créé 
-                nb_pages=scan.pdfimg(path+'/'+fichier,mon_dossier)
+                try:
+                    nb_pages=scan.pdfimg(path+'/'+fichier,mon_dossier)
+                except:
+                    print("Pb rencontre lors de la lecture du fichier "+ fichier)
 
                 #Commencer le traitement pour chacune des pages recensées
                 reponses_fichier=[]
@@ -62,93 +65,132 @@ class Model(object):
 
                     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
                     dest=cv2.dilate(imcanny,kernel)
-                    #coord_bords,cont_bords=scan.detectbord(dest)
-                    coord_bords=scan.detecterbord(imgray)
 
-                    if(len(coord_bords) != 5):
-                        print("Oups, je n'ai pas trouvé tous les points pour faire la bonne rotation")
-                        continue
-                    #On a trouve nos 5 carrés du bord et on va chercher la bonne rotation
 
-                    #Penser à l'écart pour une efficacité
-                    angle_rot=aide.rotationimage(coord_bords,80)
-                    imrote=scan.rotation(dest,angle_rot)
-                    imflou=scan.rotation(imflou,angle_rot)
-                    couleur=scan.rotation(img,angle_rot)
-                    imgray=scan.rotation(imgray,angle_rot)
+                    try:
+                        #coord_bords,cont_bords=scan.detectbord(dest)
+                        coord_bords=scan.detecterbord(imgray)
 
-                    #Apres rotation, on redétecte les bords sur l'image pour la remetre droite
-                    #si elle était de travers
+                        if(len(coord_bords) != 5):
+                            #On essaye de detecter les bords avec la 2eme methode
+                            coord_bords,cont_bords=scan.detectbord(dest)
+                            if(len(coord_bords) != 5):
+                                print("Oups, je n'ai pas trouvé tous les points pour faire la bonne rotation")
+                                angle_rot=-90
+                                #continue
+                        #On a trouve nos 5 carrés du bord et on va chercher la bonne rotation
 
-                    #(peut etre cette partie est-elle inutile mais on verra)
+                        #Penser à l'écart pour une efficacité
+                        if(len(coord_bords) == 5):
+                            #angle_rot=aide.rotationimage(coord_bords,80)
+                            angle_rot=-90
+                        imrote=scan.rotation(dest,angle_rot)
+                        imflou=scan.rotation(imflou,angle_rot)
+                        couleur=scan.rotation(img,angle_rot)
+                        imgray=scan.rotation(imgray,angle_rot)
 
-                    #coord_bords,cont_bords=scan.detectbord(imrote)
-                    coord_bords=scan.detecterbord(imgray)
-                    if(len(coord_bords) < 4):
-                        print("Oups, probleme pour le cadrage")
-                        continue                    
+                        #Apres rotation, on redétecte les bords sur l'image pour la remetre droite
+                        #si elle était de travers
 
-                    #Les parties commentées sont de l'ancienne version
-                    """cont=aide.sort_contours(cont_bords)[0]
-                    pliste=[]
-                    for u,cnt in enumerate(cont):
-                        #on a etudie la feuille et on sait que le repere au milieu est le 3eme point
-                        #on veut le sauter pour calibrer sur les bords
-                        if (u!=2):
-                            ln=cv2.arcLength(cnt, True)
-                            approx = cv2.approxPolyDP(cnt, 0.02 * ln, True)
-                            (tl, tr, br, bl)=aide.order_points(approx.reshape(4,2))   
-                            pliste.append((tr[0],tr[1]))  
-                    rec=aide.order_points(np.array(pliste))"""
-                    #On veut remettre la feuille a l'endroit
-                    rec=np.array(coord_bords)
-                    paper=aide.four_point_transform(imflou,rec)
-                    pdest=aide.four_point_transform(imrote,rec)
-                    papier=aide.four_point_transform(couleur,rec)
+                        #(peut etre cette partie est-elle inutile mais on verra)
 
-                    #On s'attaque au nom et au listening/reading
-                    contours, hierarchy = cv2.findContours(pdest, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                    ctri=sorted(contours, key=cv2.contourArea, reverse=False)
-                    chemin=scan.extraction_nom(papier,i,ctri)
-                    parties=scan.detection_sections(paper,ctri)
+                        #coord_bords,cont_bords=scan.detectbord(imrote)
+                        coord_bords=scan.detecterbord(imgray)
+                        if(len(coord_bords) < 4):
+                            print("Oups, probleme pour le cadrage")
+                            #On essaye d'appeler la fonction de detection de bord qui utilise les contours
+                            coord_bords,cont_bords=scan.detectbord(imrote)
+                            if(len(coord_bords)<4):
+                                #si malgré ça on n'a pas de solution on abandonne
+                                print("C'est mort ")
+                                continue
+                        #Les parties commentées sont de l'ancienne version
+                        """cont=aide.sort_contours(cont_bords)[0]
+                        pliste=[]
+                        for u,cnt in enumerate(cont):
+                            #on a etudie la feuille et on sait que le repere au milieu est le 3eme point
+                            #on veut le sauter pour calibrer sur les bords
+                            if (u!=2):
+                                ln=cv2.arcLength(cnt, True)
+                                approx = cv2.approxPolyDP(cnt, 0.02 * ln, True)
+                                (tl, tr, br, bl)=aide.order_points(approx.reshape(4,2))   
+                                pliste.append((tr[0],tr[1]))  
+                        rec=aide.order_points(np.array(pliste))"""
+                        #On veut remettre la feuille a l'endroit
+                        rec=np.array(coord_bords)
+                        paper=aide.four_point_transform(imflou,rec)
+                        pdest=aide.four_point_transform(imrote,rec)
+                        papier=aide.four_point_transform(couleur,rec)
 
-                    if(len(parties)!=2):
-                        #Si on n'a pas trouvé les 2 parties distinctement
-                        #On refait le traitement en augmentant le noyau
-                        #le but etant d'augmenter la dilatation pour fermer le carres
-                        val=5
-                        ok=False
-                        while val<13:
-                            val+=2
-                            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (val,val))
-                            dest=cv2.dilate(imcanny,kernel)
-                            imrote=scan.rotation(dest,angle_rot)
-                            pdest=aide.four_point_transform(imrote,rec)
-                            contours, hierarchy = cv2.findContours(pdest, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                            ctri=sorted(contours, key=cv2.contourArea, reverse=False)
-                            parties=scan.detection_sections(paper,ctri)
-                            if(len(parties)==2):
-                                ok=True
-                                break
-                            else:
-                                print('\t',i,"\t",len(coord_bords),"\t",len(parties))
-                                print("Le listening et le reading n'ont pas étés trouves") 
-                        if not ok:
-                            continue
+                        #On s'attaque au nom et au listening/reading
+                        contours, hierarchy = cv2.findContours(pdest, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                        ctri=sorted(contours, key=cv2.contourArea, reverse=False)
+                        chemin=scan.extraction_nom(papier,i,ctri)
+                        parties=scan.detection_sections(paper,ctri)
 
-                    listening=parties[0]
-                    reading=parties[1]
-                    
-                    choix1,seuillage1=scan.division_image(listening)
-                    choix2,seuillage2=scan.division_image(reading)
+                        if(len(parties)!=2):
+                            #Si on n'a pas trouvé les 2 parties distinctement
+                            #On refait le traitement en augmentant le noyau
+                            #le but etant d'augmenter la dilatation pour fermer le carres
+                            val=5
+                            ok=False
+                            while val<11:
+                                val+=2
+                                kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (val,val))
+                                dest=cv2.dilate(imcanny,kernel)
+                                imrote=scan.rotation(dest,angle_rot)
+                                pdest=aide.four_point_transform(imrote,rec)
+                                contours, hierarchy = cv2.findContours(pdest, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                                ctri=sorted(contours, key=cv2.contourArea, reverse=False)
+                                parties=scan.detection_sections(paper,ctri)
+                                if(len(parties)==2):
+                                    ok=True
+                                    break
+                                else:
+                                    print('\t',i,"\t",len(coord_bords),"\t",len(parties))
+                                    print("Le listening et le reading n'ont pas étés trouves") 
+                            if not ok:
+                                #On essaye d'appeler la fonction de detection de bord qui utilise les contours
+                                # on refait ce debut juste parce que le kernel a ete modifie precedement 
+                                kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
+                                dest=cv2.dilate(imcanny,kernel)
+                                imrote=scan.rotation(dest,angle_rot)
 
-                    score_l,rep_list=scan.detection_rep(choix1,seuillage1,listening_r,5)
-                    score_r,rep_read=scan.detection_rep(choix2,seuillage2,reading_r,4)
+                                coord_bords,cont_bords=scan.detectbord(imrote)
+                                rec=np.array(coord_bords)
+                                paper=aide.four_point_transform(imgray,rec)
+                                pdest=aide.four_point_transform(imrote,rec)
+                                papier=aide.four_point_transform(couleur,rec)
+                                rec=np.array(coord_bords)
 
-                    noms_fichier.append(chemin)
-                    reponses_etud=rep_list+rep_read
-                    reponses_fichier.append(reponses_etud)
-                    score_fichier.append((score_l,score_r))
+                                #On s'attaque au nom et au listening/reading
+                                contours, hierarchy = cv2.findContours(pdest, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                                ctri=sorted(contours, key=cv2.contourArea, reverse=False)
+                                resu=scan.extraction_nom(papier,i,ctri)
+                                parties=scan.detection_sections(paper,ctri)
+                                if(len(parties)!=2):
+                                    #si malgré ça on n'a pas de solution on abandonne
+                                    print("C'est mort ")
+                                    continue
+
+                        listening=parties[0]
+                        reading=parties[1]
+                        
+                        choix1,seuillage1=scan.division_image(listening)
+                        choix2,seuillage2=scan.division_image(reading)
+
+                        score_l,rep_list=scan.detection_rep(choix1,seuillage1,listening_r,5)
+                        score_r,rep_read=scan.detection_rep(choix2,seuillage2,reading_r,4)
+
+                        noms_fichier.append(chemin)
+                        reponses_etud=rep_list+rep_read
+                        reponses_fichier.append(reponses_etud)
+                        score_fichier.append((score_l,score_r))
+
+                    except:
+                        print('Une exceptiona a été levée lors de la correction de la feuille'+ str(i))
+                        e= sys.exc_info()[0]
+                        print(e)
 
                 #ici envoyer le resultat à l'excel
                 name=fichier.split('.')
