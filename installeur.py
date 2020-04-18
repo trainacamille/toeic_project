@@ -13,7 +13,7 @@ base = None
 if sys.platform == "win32":
     base = "Win32GUI"
 
-setup(  name = "CorrecteurTOEIC",
+setup(  name = 'CorrecteurTOEIC',
         version = "1.0",
         description = "Logiciel de correction de toeic",
         options = {"build_exe": build_exe_options},
