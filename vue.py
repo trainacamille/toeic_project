@@ -4,9 +4,10 @@ from gi.repository import Gtk, GObject, Gdk
 import os
 
 
-
+#definition de la vue
 class View(Gtk.Window):
 
+	#definition des signaux qui seront emis
     __gsignals__={
         'telecharg-ready': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
         'correct-clicked': (GObject.SIGNAL_RUN_FIRST, None,(str,str,)),
@@ -14,11 +15,14 @@ class View(Gtk.Window):
         'enr-clicked': (GObject.SIGNAL_RUN_FIRST, None,(str,)),
     }
 
+	#definition de initialisation de la vue
     def __init__(self):
+		#initialisation de la fenetre
         Gtk.Window.__init__(self, title="logiciel Toeic")
         self.set_border_width(10)
         self.resize(600,500)
 
+		#ajout du css a la fenetre
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data(b"""
 			window{
@@ -34,13 +38,16 @@ class View(Gtk.Window):
             css_provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)"""
 
+		#ajout boite verticale
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL , spacing=6)
         self.add(vbox)
 
+		#ajout de la barre d'onglets
         stack = Gtk.Stack()
         stack.set_transition_type(Gtk.StackTransitionType.NONE)
         stack.set_transition_duration(1000)
 
+		#ajout des grilles pour les onglets
         gr = Gtk.Grid()
         self.add(gr)
         gr.set_column_homogeneous(True)
@@ -51,13 +58,14 @@ class View(Gtk.Window):
         grid.set_column_homogeneous(True)
         grid.set_row_spacing(30)
 
-
         grid2 = Gtk.Grid()
         self.add(grid2)
         grid2.set_column_homogeneous(True)
         grid2.set_row_homogeneous(True)
         grid2.set_row_spacing(30)
 
+
+		#ajout des elements de l'onglet telechargement
         self.sel_tel = Gtk.FileChooserButton("Selectionner un dossier")
         self.sel_tel.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
         but= Gtk.Button(label="Valider")
@@ -69,6 +77,7 @@ class View(Gtk.Window):
         gr.attach(self.sel_tel,0,0,1,2)
         gr.attach(but,0,2,1,2)
 
+		#ajout des elements de l'onglet enregistrer correction
         button1 = Gtk.Button(label="Commencer l'enregistrement")
         self.entry1 = Gtk.Entry()
         self.entry1.set_text("Nom du TOEIC")
@@ -80,6 +89,7 @@ class View(Gtk.Window):
 
         button1.connect("clicked",self.enrg_corr)
 
+		#ajout des elements de l'onglet correction
         self.sel_cor = Gtk.FileChooserButton("Selectionner un dossier")
         self.sel_cor.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
 
@@ -103,22 +113,25 @@ class View(Gtk.Window):
         button2.connect("clicked",self.correct)
         self.button3.connect("clicked",self.display)
 
+		#ajout de l'echangeur des onglets
         stack_switcher = Gtk.StackSwitcher()
         stack_switcher.set_stack(stack)
         vbox.pack_start(stack_switcher, False , False, 0)
         vbox.pack_start(stack, True, False, 0)
 
-
+	#fonction pour le clic du bouton telecharger
     def tel(self,b):
         self.emit('telecharg-ready', self.sel_tel.get_filename())
 
+	#fonction pour le clic du bouton commencer l'enregistrement
     def enrg_corr(self,b):
         self.emit('enr-clicked', self.entry1.get_text())
         self.box.append_text(self.entry1.get_text())
 		
-
+	#fonction pour le clic du bouton corriger
     def correct(self,b):
         self.emit('correct-clicked',self.box.get_active_text(),self.sel_cor.get_filename())
 
+	#fonction pour le clic du bouton afficher
     def display(self,b):
         self.emit('display-clicked',self.sel_cor.get_filename())

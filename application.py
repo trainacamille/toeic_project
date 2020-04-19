@@ -6,6 +6,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio
 
+#initialiser l'application avec le model, la vue et le controlleur pour respecter architecture MVC
 class Application(Gtk.Application):
 
     def __init__(self):
