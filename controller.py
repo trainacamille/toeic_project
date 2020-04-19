@@ -31,7 +31,7 @@ class Controller(object):
         self._view.button3.set_sensitive(True)
 
     def display(self, b,path):
-        print("affichage")
+        #print("affichage")
         os.system('explorer '+path)
 
     def tel(self, b, path):
