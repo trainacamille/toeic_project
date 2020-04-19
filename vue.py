@@ -71,7 +71,7 @@ class View(Gtk.Window):
 
         button1 = Gtk.Button(label="Commencer l'enregistrement")
         self.entry1 = Gtk.Entry()
-        self.entry1.set_text("Nom du TOEIC")
+        self.entry1.set_placeholder_text("Nom du TOEIC")
 
         grid.attach(self.entry1,0,0,1,2)
         grid.attach(button1,0,3,1,2)
