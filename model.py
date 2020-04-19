@@ -37,12 +37,15 @@ class Model(object):
                 try:
                     nb_pages=scan.pdfimg(path+'/'+fichier,mon_dossier)
                 except:
-                    print("Pb rencontre lors de la lecture du fichier "+ fichier)
+                    e=sys.exc_info[0]
+                    continue
+                    #print("Pb rencontre lors de la lecture du fichier "+ fichier)
 
                 #Commencer le traitement pour chacune des pages recensées
                 reponses_fichier=[]
                 noms_fichier=[]
                 score_fichier=[]
+                liste_erreurs=[]
                 
                 for i in range(0,nb_pages+1):
                     reponses_etud=[]
@@ -50,10 +53,13 @@ class Model(object):
 
                     #Si on n'a pas eu l'image
                     if(img is None):
-                        print('Oups, ton image n\'existe pas dis-donc!')
+                        liste_erreurs.append(('feuille '+str(i),"L'image associée à cette feuille n'a pas été trouvé"))
                         continue
                     #Detecter les contours pour la rotation
                     #Pour cela appliquer le prétraitement de l'image et passer l'image traitée
+
+                    #La ligne commentee ci dessous permet de nettoyer une image trop bruitee
+                    # img = cv2.fastNlMeansDenoisingColored(img,None,15,10,7,21)
 
                     imgray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
                     #plus besojn du contraste avec les composantes connexes
@@ -75,15 +81,19 @@ class Model(object):
                             #On essaye de detecter les bords avec la 2eme methode
                             coord_bords,cont_bords=scan.detectbord(dest)
                             if(len(coord_bords) != 5):
-                                print("Oups, je n'ai pas trouvé tous les points pour faire la bonne rotation")
-                                angle_rot=-90
-                                #continue
+                                liste_erreurs.append(('feuille '+str(i),"Les bords de la feuilles n'ont pas été trouvés, essayez un meilleur scan"))
+                                #angle_rot=-90
+                                continue
                         #On a trouve nos 5 carrés du bord et on va chercher la bonne rotation
 
                         #Penser à l'écart pour une efficacité
+                        #l'écart dépend de l'alignement des points
+
+                        angle_rot=aide.rotationimage(coord_bords,80)
+                        """#cette partie etait pour les copies de l3 a 4 carres
                         if(len(coord_bords) == 5):
-                            #angle_rot=aide.rotationimage(coord_bords,80)
-                            angle_rot=-90
+                            #l'écart dépend de l'alignement des points
+                            angle_rot=-90"""
                         imrote=scan.rotation(dest,angle_rot)
                         imflou=scan.rotation(imflou,angle_rot)
                         couleur=scan.rotation(img,angle_rot)
@@ -97,12 +107,11 @@ class Model(object):
                         #coord_bords,cont_bords=scan.detectbord(imrote)
                         coord_bords=scan.detecterbord(imgray)
                         if(len(coord_bords) < 4):
-                            print("Oups, probleme pour le cadrage")
                             #On essaye d'appeler la fonction de detection de bord qui utilise les contours
                             coord_bords,cont_bords=scan.detectbord(imrote)
                             if(len(coord_bords)<4):
                                 #si malgré ça on n'a pas de solution on abandonne
-                                print("C'est mort ")
+                                liste_erreurs.append(('feuille '+str(i+1),'Impossible de bien cadrer la feuille pour la correction, essayez un meilleur scan'))
                                 continue
                         #Les parties commentées sont de l'ancienne version
                         """cont=aide.sort_contours(cont_bords)[0]
@@ -147,8 +156,7 @@ class Model(object):
                                     ok=True
                                     break
                                 else:
-                                    print('\t',i,"\t",len(coord_bords),"\t",len(parties))
-                                    print("Le listening et le reading n'ont pas étés trouves") 
+                                    pass 
                             if not ok:
                                 #On essaye d'appeler la fonction de detection de bord qui utilise les contours
                                 # on refait ce debut juste parce que le kernel a ete modifie precedement 
@@ -170,7 +178,7 @@ class Model(object):
                                 parties=scan.detection_sections(paper,ctri)
                                 if(len(parties)!=2):
                                     #si malgré ça on n'a pas de solution on abandonne
-                                    print("C'est mort ")
+                                    liste_erreurs.append(('feuille '+str(i+1),'Impossible recuperer distinctement le listening et le reading, essayez un meilleur scan'))
                                     continue
 
                         listening=parties[0]
@@ -188,17 +196,17 @@ class Model(object):
                         score_fichier.append((score_l,score_r))
 
                     except:
-                        print('Une exceptiona a été levée lors de la correction de la feuille'+ str(i))
-                        e= sys.exc_info()[0]
-                        print(e)
+                        liste_erreurs.append(('feuille '+str(i+1),'Une erreur est survenue en corrigeant cette feuille, essayez un meilleur scan'))
+                        #e= sys.exc_info()[0]
+                        #print(e)
 
                 #ici envoyer le resultat à l'excel
                 name=fichier.split('.')
-                ex.excel_final(path+"/"+name[0]+".xlsx",noms_fichier,reponses_fichier,score_fichier)
+                ex.excel_final(path+"/"+name[0]+".xlsx",noms_fichier,reponses_fichier,score_fichier,liste_erreurs)
 
                 #print(reponses_fichier)
 
-                print()
-                print("Correction Terminee")    
+                #print()
+                #print("Correction Terminee")    
 
                 os.system("rmdir name "+mon_dossier+" /S /Q")
