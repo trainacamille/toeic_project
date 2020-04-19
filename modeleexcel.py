@@ -125,13 +125,21 @@ def inserer_reponses(ws2,ws3, listerep, i):
         ws2[rep+str(i+2)] = chr(ord('A')+listerep[i][j]-1)
         ws3[rep+str(i+2)] = chr(ord('A')+listerep[i][j+100]-1)
 
-def excel_final(nomfichier, listenom, listerep, listescore):
+def remplirerr(ws4,listeerr):
+    ws4['A1'] = "feuille erronnée"
+    ws4['B1'] = "erreur"
+    for i in range(0,len(listeerr)):
+        ws4['A'+str(i+2)] = listeerr[i][0]
+        ws4['B'+str(i+2)] = listeerr[i][1]
+
+def excel_final(nomfichier, listenom, listerep, listescore, listeerr):
     wb = Workbook()
     ws1 = wb.active
     ws2 = wb.create_sheet(title="listening")
     ws3 = wb.create_sheet(title="reading")
+    ws4 = wb.create_sheet(title="erreurs")
     init_excel(ws1,ws2,ws3)
-    
+    remplirerr(ws4,listeerr)
     for i in range(0,len(listenom)):
         ws1['C'+str(i+2)] = listescore[i][0]
         ws1['D'+str(i+2)] = listescore[i][1]
