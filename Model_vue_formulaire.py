@@ -6,7 +6,7 @@ class Model(object):
 
             #dans le nom du fichier faudra mettre la concatenation avec le path
             #Ouverture du fichier
-            nom_de_fichier = nom_fichier +".json"
+            nom_de_fichier = "JSON/"+nom_fichier +".json"
             fichier = open(nom_de_fichier,'w')
             #Ecriture de la partie Listening
             fichier.write('{''"''Listening''"' ':[{' )
