@@ -30,14 +30,15 @@ class Model(object):
                 mon_dossier='correction'
                 #Si le dossier existe on le supprime avant de le (re)creer
                 if os.path.exists(mon_dossier):
-                    os.system("rmdir name "+mon_dossier+" /S /Q")
+                    os.system("rmdir "+mon_dossier+"/S/Q")
     
                 os.mkdir(mon_dossier)
                 #prendre le nom du fichier par la prof(ici statique) et le chemin créé 
                 try:
                     nb_pages=scan.pdfimg(path+'/'+fichier,mon_dossier)
                 except:
-                    e=sys.exc_info[0]
+                    name=fichier.split('.')
+                    ex.excel_final(path+"/"+name[0]+".xlsx",[],[],[],[(fichier,'Une erreur est survenue lors de la lecture')])
                     continue
                     #print("Pb rencontre lors de la lecture du fichier "+ fichier)
 
@@ -209,4 +210,4 @@ class Model(object):
                 #print()
                 #print("Correction Terminee")    
 
-                os.system("rmdir name "+mon_dossier+" /S /Q")
+                os.system("rmdir "+mon_dossier+"/S/Q")
